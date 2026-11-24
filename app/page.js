@@ -254,6 +254,16 @@ export default function Page() {
             <Text className="text-gray-400 text-xs mt-1">{item.source}</Text>
             <Text className="mt-2">{item.summary}</Text>
             <Text className="mt-3 text-emerald-400 text-sm"><strong>Implication.</strong> {item.implication}</Text>
+            {item.url && (
+              <a
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block mt-3 text-sm text-orange-400 hover:text-orange-300 underline"
+              >
+                View source →
+              </a>
+            )}
           </Card>
         ))}
       </Grid>
