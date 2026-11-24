@@ -1,0 +1,8 @@
+{
+  "umint": { "yield": 3.72, "prior": 3.67, "source": "UBS factsheet", "asOf": "2026-11-24" },
+  "buidl": { "yield": 3.76, "prior": 3.79, "source": "BlackRock / Securitize", "asOf": "2026-11-24" },
+  "benji": { "yield": 3.81, "prior": 3.80, "source": "Franklin Templeton", "asOf": "2026-11-24" },
+  "usyc": { "yield": 3.85, "prior": 3.81, "source": "Circle", "asOf": "2026-11-24" },
+  "wtgxx": { "yield": 3.79, "prior": 3.81, "source": "WisdomTree", "asOf": "2026-11-24" },
+  "ustb": { "yield": 3.88, "prior": 3.82, "source": "Superstate", "asOf": "2026-11-24" }
+}
