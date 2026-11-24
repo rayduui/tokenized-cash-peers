@@ -2,19 +2,6 @@
 
 import { useEffect, useState, useMemo } from 'react';
 
-const KNOWN_FUNDS = [
-  { ticker: 'BUIDL', name: 'BlackRock BUIDL', issuer: 'BlackRock / Securitize', type: 'USD MMF', yield: 3.76 },
-  { ticker: 'USYC', name: 'Circle USYC', issuer: 'Circle', type: 'USD MMF', yield: 3.85 },
-  { ticker: 'BENJI', name: 'Franklin BENJI', issuer: 'Franklin Templeton', type: 'USD MMF', yield: 3.81 },
-  { ticker: 'USDY', name: 'Ondo USDY', issuer: 'Ondo', type: 'Yield note', yield: 4.10 },
-  { ticker: 'OUSG', name: 'Ondo OUSG', issuer: 'Ondo', type: 'Treasuries', yield: 3.90 },
-  { ticker: 'WTGXX', name: 'WisdomTree WTGXX', issuer: 'WisdomTree', type: 'USD MMF', yield: 3.79 },
-  { ticker: 'USTB', name: 'Superstate USTB', issuer: 'Superstate', type: 'USD MMF', yield: 3.88 },
-  { ticker: 'uMINT', name: 'UBS uMINT', issuer: 'UBS', type: 'USD MMF', yield: 3.72 },
-  { ticker: 'JTRSY', name: 'Janus Henderson JTRSY', issuer: 'Janus Henderson', type: 'Treasuries', yield: 3.65 },
-  { ticker: 'TBILL', name: 'OpenEden TBILL', issuer: 'OpenEden', type: 'Treasuries', yield: 3.80 },
-];
-
 function formatAUM(n) {
   if (n == null || isNaN(n)) return 'n.a.';
   if (n >= 1e9) return '$' + (n / 1e9).toFixed(2) + 'B';
@@ -23,6 +10,8 @@ function formatAUM(n) {
 }
 
 export default function Page() {
+  const [funds, setFunds] = useState([]);
+  const [news, setNews] = useState([]);
   const [protocols, setProtocols] = useState([]);
   const [status, setStatus] = useState('Loading');
   const [lastUpdate, setLastUpdate] = useState('—');
@@ -30,17 +19,26 @@ export default function Page() {
   async function load() {
     setStatus('Refreshing…');
     try {
-      const res = await fetch('https://api.llama.fi/protocols');
-      const data = await res.json();
-      const rwa = (data || []).filter(p =>
+      const [yRes, nRes, pRes] = await Promise.all([
+        fetch('/api/yields'),
+        fetch('/api/news'),
+        fetch('https://api.llama.fi/protocols')
+      ]);
+      const yData = await yRes.json();
+      const nData = await nRes.json();
+      const pData = await pRes.json();
+
+      setFunds(yData.funds || []);
+      setNews(nData.items || []);
+
+      const rwa = (pData || []).filter(p =>
         (p.category || '').toLowerCase().includes('rwa') ||
         (p.name || '').toLowerCase().match(/buidl|usyc|benji|usdy|ousg|wtgxx|ustb|umint|jtrsy|tbill|securitize|ondo|spiko|centrifuge/)
       );
       setProtocols(rwa);
       setStatus('Live');
     } catch (e) {
-      setStatus('Fallback');
-      setProtocols([]);
+      setStatus('Error');
     }
     setLastUpdate(new Date().toLocaleString('en-GB', { timeZone: 'Asia/Hong_Kong' }) + ' HKT');
   }
@@ -48,23 +46,23 @@ export default function Page() {
   useEffect(() => { load(); }, []);
 
   const enriched = useMemo(() => {
-    return KNOWN_FUNDS.map(f => {
+    return funds.map(f => {
       const match = protocols.find(p =>
         (p.name || '').toLowerCase().includes(f.ticker.toLowerCase()) ||
         (p.symbol || '').toLowerCase().includes(f.ticker.toLowerCase())
       );
       return {
         ...f,
-        aum: match?.tvl || match?.chainTvls?.['Ethereum'] || null,
+        aum: match?.tvl || null,
         change1d: match?.change_1d ?? null,
         change7d: match?.change_7d ?? null,
         chains: match?.chains?.length || 0,
       };
     }).sort((a, b) => (b.aum || 0) - (a.aum || 0));
-  }, [protocols]);
+  }, [funds, protocols]);
 
   const totalAUM = enriched.reduce((s, f) => s + (f.aum || 0), 0);
-  const avgYield = enriched.reduce((s, f) => s + f.yield, 0) / enriched.length;
+  const avgYield = enriched.length ? enriched.reduce((s, f) => s + f.yield, 0) / enriched.length : 0;
 
   return (
     <div style={{ maxWidth: 1320, margin: '0 auto', padding: '0 22px' }}>
@@ -108,8 +106,23 @@ export default function Page() {
       </div>
 
       <section style={{ marginBottom: 40 }}>
+        <h2 style={{ fontSize: 20, fontWeight: 560, marginBottom: 4 }}>Developments</h2>
+        <p style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 14 }}>Updated from scheduled data. Last as-of in source file.</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 12 }}>
+          {news.map((item, i) => (
+            <div key={i} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: 16 }}>
+              <h3 style={{ fontSize: 14.5, fontWeight: 600, marginBottom: 4 }}>{item.title}</h3>
+              <div style={{ fontSize: 11.5, color: 'var(--muted)', marginBottom: 8 }}>{item.source} · {item.date}</div>
+              <p style={{ fontSize: 13, marginBottom: 8 }}>{item.summary}</p>
+              <div style={{ fontSize: 13, borderTop: '1px solid var(--border)', paddingTop: 8 }}><strong>Implication.</strong> {item.implication}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section style={{ marginBottom: 40 }}>
         <h2 style={{ fontSize: 20, fontWeight: 560, marginBottom: 4 }}>Tokenized funds</h2>
-        <p style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 14 }}>Major USD liquidity and treasury products. AUM from DefiLlama where matched; yields from issuer factsheets. Sorted by matched AUM.</p>
+        <p style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 14 }}>Major USD liquidity and treasury products. AUM from DefiLlama where matched; yields from scheduled source. Sorted by matched AUM.</p>
         <div style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: 12, background: 'var(--surface)' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontVariantNumeric: 'tabular-nums' }}>
             <thead>
@@ -137,26 +150,8 @@ export default function Page() {
         </div>
       </section>
 
-      <section style={{ marginBottom: 48 }}>
-        <h2 style={{ fontSize: 20, fontWeight: 560, marginBottom: 4 }}>Market notes</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 12 }}>
-          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: 16 }}>
-            <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>Coverage</h3>
-            <p style={{ fontSize: 13, color: 'var(--muted)' }}>Spans US-domiciled MMFs (BUIDL, BENJI, WTGXX), Bermuda/Cayman products (USYC), Singapore VCC (uMINT), and yield notes (USDY). Booking centres and settlement rails differ by issuer.</p>
-          </div>
-          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: 16 }}>
-            <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>On-chain activity</h3>
-            <p style={{ fontSize: 13, color: 'var(--muted)' }}>AUM and chain counts pulled from DefiLlama protocols endpoint. DeFi TVL utilization varies widely — many funds remain primarily transfer-agent held rather than deposited into lending markets.</p>
-          </div>
-          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: 16 }}>
-            <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>Yield</h3>
-            <p style={{ fontSize: 13, color: 'var(--muted)' }}>Official 7-day yields shown where published. Products that accumulate (uMINT, USDY) are not directly comparable on NAV to rebasing $1 funds (BUIDL, BENJI).</p>
-          </div>
-        </div>
-      </section>
-
       <footer style={{ borderTop: '1px solid var(--border)', padding: '28px 0 40px', fontSize: 12, color: 'var(--muted)', lineHeight: 1.6 }}>
-        <p>For information only. Not an offer or recommendation. Data from DefiLlama public API and issuer factsheets. Figures are not independently audited. Last refresh: {lastUpdate}.</p>
+        <p>For information only. Not an offer or recommendation. Data from DefiLlama public API and scheduled source files. Figures are not independently audited. Last refresh: {lastUpdate}.</p>
       </footer>
     </div>
   );

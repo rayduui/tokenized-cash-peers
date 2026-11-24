@@ -1,0 +1,33 @@
+{
+  "asOf": "2026-11-24",
+  "items": [
+    {
+      "title": "DTCC expands eligible collateral for tokenized MMFs",
+      "source": "DTCC",
+      "date": "2026-11-20",
+      "summary": "Updated schedule recognises selected tokenized USD money-market funds as eligible margin for certain cleared products. Published haircuts 2–5% by structure and transfer-agent controls.",
+      "implication": "Improves booking and margin efficiency for global cash books."
+    },
+    {
+      "title": "Securitize expands BUIDL dealing capacity",
+      "source": "BlackRock / Securitize",
+      "date": "2026-11-18",
+      "summary": "Transfer agent raised daily capacity. Settlement remains T+0 against USDC in the existing 24/7 window for eligible institutions.",
+      "implication": "Higher operational throughput for large flows."
+    },
+    {
+      "title": "ISDA guidance on tokenized-fund CSA treatment",
+      "source": "ISDA",
+      "date": "2026-11-19",
+      "summary": "Clarifies how tokenized short-term government and money-market shares may be treated under existing CSA language when the underlying is eligible.",
+      "implication": "Reduces legal friction for bilateral collateral use."
+    },
+    {
+      "title": "Ondo USDY crosses $2.3B on-chain",
+      "source": "Market data",
+      "date": "2026-11-23",
+      "summary": "Ondo’s yield-bearing note remains one of the largest tokenized USD products by distributed value across multiple chains.",
+      "implication": "Confirms continued institutional and crypto-native demand for yield-bearing cash alternatives."
+    }
+  ]
+}

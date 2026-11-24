@@ -1,0 +1,15 @@
+{
+  "asOf": "2026-11-24",
+  "funds": [
+    { "ticker": "BUIDL", "name": "BlackRock BUIDL", "issuer": "BlackRock / Securitize", "type": "USD MMF", "yield": 3.76, "prior": 3.79 },
+    { "ticker": "USYC", "name": "Circle USYC", "issuer": "Circle", "type": "USD MMF", "yield": 3.85, "prior": 3.81 },
+    { "ticker": "BENJI", "name": "Franklin BENJI", "issuer": "Franklin Templeton", "type": "USD MMF", "yield": 3.81, "prior": 3.80 },
+    { "ticker": "USDY", "name": "Ondo USDY", "issuer": "Ondo", "type": "Yield note", "yield": 4.10, "prior": 4.05 },
+    { "ticker": "OUSG", "name": "Ondo OUSG", "issuer": "Ondo", "type": "Treasuries", "yield": 3.90, "prior": 3.88 },
+    { "ticker": "WTGXX", "name": "WisdomTree WTGXX", "issuer": "WisdomTree", "type": "USD MMF", "yield": 3.79, "prior": 3.81 },
+    { "ticker": "USTB", "name": "Superstate USTB", "issuer": "Superstate", "type": "USD MMF", "yield": 3.88, "prior": 3.82 },
+    { "ticker": "uMINT", "name": "uMINT", "issuer": "Independent", "type": "USD MMF", "yield": 3.72, "prior": 3.67 },
+    { "ticker": "JTRSY", "name": "Janus Henderson JTRSY", "issuer": "Janus Henderson", "type": "Treasuries", "yield": 3.65, "prior": 3.62 },
+    { "ticker": "TBILL", "name": "OpenEden TBILL", "issuer": "OpenEden", "type": "Treasuries", "yield": 3.80, "prior": 3.78 }
+  ]
+}
