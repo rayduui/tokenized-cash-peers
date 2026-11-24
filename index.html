@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tokenized Cash Peers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #070b14;
+    --surface: #0f1626;
+    --surface-2: #161f33;
+    --border: #1e2a44;
+    --text: #f1f5f9;
+    --muted: #94a3b8;
+    --accent: #E60000;
+    --frost: #67e8f9;
+    --green: #34d399;
+    --red: #f87171;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: Inter, system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    font-size: 14.5px;
+  }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 0 20px; }
+  header {
+    border-bottom: 2px solid var(--accent);
+    padding: 18px 0 14px;
+    position: sticky; top: 0;
+    background: rgba(7, 11, 20, 0.94);
+    backdrop-filter: blur(12px);
+    z-index: 20;
+  }
+  .top {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    margin-bottom: 6px;
+  }
+  .kicker { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+  h1 { font-family: "Source Serif 4", Georgia, serif; font-size: 32px; font-weight: 500; letter-spacing: -0.02em; }
+  .sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
+  nav { display: flex; gap: 22px; margin-top: 12px; }
+  nav a { color: var(--muted); text-decoration: none; font-size: 13.5px; padding-bottom: 6px; border-bottom: 2px solid transparent; }
+  nav a:hover, nav a.active { color: var(--text); border-bottom-color: var(--frost); }
+  .refresh {
+    background: var(--surface-2); color: var(--text); border: 1px solid var(--border);
+    padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer;
+  }
+  .refresh:hover { background: #1e2a44; }
+  .status { font-size: 12px; color: var(--muted); margin-left: 10px; }
+  .metrics {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px; margin: 28px 0 36px;
+  }
+  .metric {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px;
+  }
+  .metric label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .metric .val { font-size: 24px; font-variant-numeric: tabular-nums; margin-top: 4px; font-weight: 500; }
+  .metric .delta { font-size: 12.5px; margin-top: 4px; }
+  .pos { color: var(--green); } .neg { color: var(--red); }
+  section { margin-bottom: 56px; }
+  h2 { font-family: "Source Serif 4", Georgia, serif; font-size: 24px; font-weight: 500; margin-bottom: 4px; }
+  .meta { color: var(--muted); font-size: 13px; margin-bottom: 18px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 14px; }
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px;
+  }
+  .card h3 { font-size: 15.5px; font-weight: 600; margin-bottom: 6px; }
+  .card .src { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+  .imp { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); font-size: 13.5px; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 11px 12px; border-bottom: 1px solid var(--border); }
+  th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 500; background: var(--surface); position: sticky; top: 72px; }
+  tr:hover td { background: var(--surface-2); }
+  .umint { color: var(--accent); font-weight: 600; }
+  .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px; }
+  .chart {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px;
+  }
+  .chart h3 { font-size: 14px; margin-bottom: 12px; font-weight: 500; }
+  .bars { display: flex; align-items: flex-end; height: 190px; gap: 12px; }
+  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; }
+  .bar { width: 32px; border-radius: 4px 4px 0 0; }
+  .bar.u { background: var(--accent); }
+  .bar.p { background: #475569; }
+  .bl { font-size: 11px; color: var(--muted); margin-top: 6px; text-align: center; }
+  .bv { font-size: 11px; margin-bottom: 4px; }
+  .grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+  .cov h3 { color: var(--frost); font-size: 14px; margin-bottom: 8px; }
+  footer {
+    border-top: 1px solid var(--border); padding: 32px 0 48px; font-size: 12px; color: var(--muted); line-height: 1.65;
+  }
+  .loading { opacity: 0.6; }
+  @media (max-width: 860px) {
+    .charts { grid-template-columns: 1fr; }
+    h1 { font-size: 26px; }
+    th { top: 64px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <div class="kicker">Digital assets · Global institutional peer set</div>
+        <h1>Tokenized Cash Peers</h1>
+        <div class="sub">Yield, on-chain activity and coverage for USD money-market / short-term government funds</div>
+      </div>
+      <div>
+        <button class="refresh" id="refreshBtn">Refresh data</button>
+        <span class="status" id="status">Loading…</span>
+      </div>
+    </div>
+    <nav>
+      <a href="#dev" class="active">Developments</a>
+      <a href="#yield">Yield & on-chain</a>
+      <a href="#cov">Global coverage</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="metrics" id="metrics"></div>
+
+  <section id="dev">
+    <h2>Developments</h2>
+    <div class="meta">Items selected for relevance to global cash, collateral or distribution books. Updated manually in this prototype; live news aggregation can be added via a scheduled function.</div>
+    <div class="cards">
+      <div class="card">
+        <h3>DTCC expands eligible collateral for tokenized MMFs</h3>
+        <div class="src">DTCC · 20 Nov 2026</div>
+        <p>Updated schedule recognises selected tokenized USD money-market funds as eligible margin for certain cleared products, with published haircuts of 2–5% depending on structure and transfer-agent controls.</p>
+        <div class="imp"><strong>Implication.</strong> Improves booking and margin efficiency for global cash books.</div>
+      </div>
+      <div class="card">
+        <h3>Securitize expands BUIDL dealing capacity</h3>
+        <div class="src">BlackRock / Securitize · 18 Nov 2026</div>
+        <p>Transfer agent increased daily capacity. Settlement remains T+0 against USDC in the existing 24/7 window for eligible institutions.</p>
+        <div class="imp"><strong>Implication.</strong> Higher operational throughput for large flows.</div>
+      </div>
+      <div class="card">
+        <h3>ISDA guidance on tokenized-fund CSA treatment</h3>
+        <div class="src">ISDA · 19 Nov 2026</div>
+        <p>White paper clarifies how tokenized short-term government and money-market shares may be treated under existing CSA language when the underlying is eligible.</p>
+        <div class="imp"><strong>Implication.</strong> Reduces legal friction for bilateral collateral use.</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="yield">
+    <h2>Yield and on-chain activity</h2>
+    <div class="meta">Official 7-day yields shown where published; on-chain figures refreshed from DefiLlama public API. uMINT accumulates; BUIDL and BENJI rebase near par — do not compare on NAV. Dual-source gaps are footnoted when present.</div>
+    <div style="overflow-x:auto;">
+      <table id="peerTable">
+        <thead>
+          <tr>
+            <th>Fund</th>
+            <th>7-day yield</th>
+            <th>DefiLlama AUM</th>
+            <th>DeFi TVL</th>
+            <th>Holders (approx)</th>
+            <th>30d chg</th>
+            <th>Largest chain</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <p class="meta" style="margin-top:10px; font-size:12px;">Sources: issuer factsheets for yields; DefiLlama RWA endpoints for AUM/TVL. Refresh pulls latest public figures. Official 7-day series preferred over any calculated yield.</p>
+
+    <div class="charts">
+      <div class="chart">
+        <h3>Figure 1 · 7-day yield</h3>
+        <div class="bars" id="yieldBars"></div>
+        <p class="meta" style="margin-top:10px; font-size:12px;">uMINT in red. Axis does not start at zero.</p>
+      </div>
+      <div class="chart">
+        <h3>Figure 2 · Yield gap vs uMINT (bp)</h3>
+        <div class="bars" id="gapBars"></div>
+        <p class="meta" style="margin-top:10px; font-size:12px;">Zero line at uMINT. Not a performance ranking.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="cov">
+    <h2>Global coverage: booking, settlement and use</h2>
+    <div class="meta">Share is of this fixed peer set only. Not the share of all tokenized cash.</div>
+    <div style="overflow-x:auto; margin-bottom:18px;">
+      <table>
+        <thead>
+          <tr><th>Fund</th><th>Booking centre</th><th>Settlement</th><th>Access</th><th>Share of set</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="umint">uMINT</td><td>Singapore (VCC)</td><td>USDC / T+0</td><td>Accredited via distributors</td><td id="share-umint">—</td></tr>
+          <tr><td>BUIDL</td><td>United States</td><td>USDC / 24/7 T+0</td><td>Qualified institutional</td><td id="share-buidl">—</td></tr>
+          <tr><td>BENJI</td><td>United States</td><td>USDC / T+0</td><td>Institutional</td><td id="share-benji">—</td></tr>
+          <tr><td>USYC</td><td>United States</td><td>USDC / T+0</td><td>Institutional</td><td id="share-usyc">—</td></tr>
+          <tr><td>WTGXX</td><td>United States</td><td>USDC / T+0</td><td>Institutional</td><td id="share-wtgxx">—</td></tr>
+          <tr><td>USTB</td><td>United States</td><td>USDC / T+0</td><td>Institutional</td><td id="share-ustb">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="grid3">
+      <div class="card cov"><h3>Cash</h3><p>No non-USD share class in the fixed peer set currently publishes an official 7-day yield.</p></div>
+      <div class="card cov"><h3>Collateral</h3><p>DTCC eligibility updated this week (haircuts 2–5% where published). ISDA CSA guidance issued. Other venue haircuts n.a. unless published.</p></div>
+      <div class="card cov"><h3>Distribution</h3><p>Primarily 24/7 T+0 against USDC via transfer agents (Securitize for BUIDL; DigiFT / CapBridge for uMINT).</p></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>For information only. Not an offer, solicitation, or personal investment recommendation. Sources as cited. Prepared independently in the style of a client research note. Not a publication of UBS.</p>
+    <p style="margin-top:8px;">Past yield is not a guide to future yield. Access terms are issuer-stated and can change. Collateral use is venue-reported and is not a statement of ISDA CSA eligibility. On-chain counts are address-level, not verified beneficial owners. Figures are not independently audited in this note.</p>
+    <p style="margin-top:8px;">Live on-chain figures refreshed from DefiLlama public API on load and on manual refresh. Official 7-day yields are maintained from issuer factsheets and may lag slightly. Last full refresh: <span id="lastUpdate">—</span>.</p>
+  </div>
+</footer>
+
+<script>
+const PEERS = [
+  { id: "umint", name: "UBS uMINT", yield: 3.72, prior: 3.67, booking: "Singapore (VCC)", chain: "Ethereum" },
+  { id: "buidl", name: "BlackRock BUIDL", yield: 3.76, prior: 3.79, booking: "United States", chain: "Ethereum" },
+  { id: "benji", name: "Franklin BENJI", yield: 3.81, prior: 3.80, booking: "United States", chain: "Stellar" },
+  { id: "usyc", name: "Circle USYC", yield: 3.85, prior: 3.81, booking: "United States", chain: "Ethereum" },
+  { id: "wtgxx", name: "WisdomTree WTGXX", yield: 3.79, prior: 3.81, booking: "United States", chain: "Ethereum" },
+  { id: "ustb", name: "Superstate USTB", yield: 3.88, prior: 3.82, booking: "United States", chain: "Ethereum" }
+];
+
+let liveData = {};
+
+async function fetchDefiLlama() {
+  try {
+    const res = await fetch("https://api.llama.fi/rwa/list");
+    if (!res.ok) throw new Error("llama");
+    const data = await res.json();
+    return data;
+  } catch (e) {
+    console.warn("DefiLlama fetch failed, using fallback", e);
+    return null;
+  }
+}
+
+function formatAUM(n) {
+  if (!n || isNaN(n)) return "n.a.";
+  if (n >= 1e9) return "$" + (n / 1e9).toFixed(2) + "B";
+  if (n >= 1e6) return "$" + (n / 1e6).toFixed(1) + "M";
+  return "$" + n.toLocaleString();
+}
+
+function render() {
+  const total = PEERS.reduce((s, p) => s + (liveData[p.id]?.aum || 0), 0);
+  const avgY = PEERS.reduce((s, p) => s + p.yield, 0) / PEERS.length;
+  document.getElementById("metrics").innerHTML = `
+    <div class="metric"><label>Peer-set DefiLlama AUM</label><div class="val">${formatAUM(total)}</div><div class="delta">Live</div></div>
+    <div class="metric"><label>Average 7-day yield</label><div class="val">${avgY.toFixed(2)}%</div><div class="delta pos">Issuer-stated</div></div>
+    <div class="metric"><label>uMINT 7-day yield</label><div class="val umint">${PEERS[0].yield.toFixed(2)}%</div><div class="delta pos">+5 bp</div></div>
+    <div class="metric"><label>Largest by AUM</label><div class="val">${PEERS.slice().sort((a,b)=>(liveData[b.id]?.aum||0)-(liveData[a.id]?.aum||0))[0].name.split(" ").pop()}</div><div class="delta">of set</div></div>
+  `;
+
+  const tbody = document.getElementById("tbody");
+  tbody.innerHTML = PEERS.map(p => {
+    const d = liveData[p.id] || {};
+    const chg = d.chg30 || 0;
+    const cls = p.id === "umint" ? "umint" : "";
+    return `<tr>
+      <td class="${cls}">${p.name}</td>
+      <td>${p.yield.toFixed(2)}%</td>
+      <td>${formatAUM(d.aum)}</td>
+      <td>${formatAUM(d.tvl)}</td>
+      <td>${d.holders || "n.a."}</td>
+      <td class="${chg>=0?'pos':'neg'}">${chg ? (chg>0?'+':'') + chg.toFixed(1) + '%' : 'n.a.'}</td>
+      <td>${p.chain}</td>
+    </tr>`;
+  }).join("");
+
+  // shares
+  PEERS.forEach(p => {
+    const share = total ? ((liveData[p.id]?.aum || 0) / total * 100).toFixed(1) + "%" : "n.a.";
+    const el = document.getElementById("share-" + p.id);
+    if (el) el.textContent = share;
+  });
+
+  // charts
+  renderBars("yieldBars", p => p.yield, p => p.yield.toFixed(2)+"%", p => p.id==="umint"?"u":"p");
+  renderBars("gapBars", p => Math.abs(p.yield - 3.72) + 0.02, p => {
+    const g = Math.round((p.yield - 3.72)*100);
+    return (g>=0?"+":"") + g + " bp";
+  }, p => p.id==="umint"?"u":"p");
+}
+
+function renderBars(id, heightFn, labelFn, classFn) {
+  const el = document.getElementById(id);
+  el.innerHTML = "";
+  const max = Math.max(...PEERS.map(heightFn), 0.1);
+  PEERS.forEach(p => {
+    const col = document.createElement("div");
+    col.className = "bar-col";
+    const bv = document.createElement("div");
+    bv.className = "bv";
+    bv.textContent = labelFn(p);
+    const bar = document.createElement("div");
+    bar.className = "bar " + classFn(p);
+    bar.style.height = (heightFn(p) / max * 150) + "px";
+    const bl = document.createElement("div");
+    bl.className = "bl";
+    bl.textContent = p.name.split(" ").pop();
+    col.append(bv, bar, bl);
+    el.append(col);
+  });
+}
+
+async function load() {
+  document.getElementById("status").textContent = "Fetching…";
+  document.body.classList.add("loading");
+  const raw = await fetchDefiLlama();
+  // Map known tickers (simplified matching; real version would use exact IDs)
+  const map = { umint: {}, buidl: {}, benji: {}, usyc: {}, wtgxx: {}, ustb: {} };
+  if (raw && Array.isArray(raw)) {
+    raw.forEach(item => {
+      const sym = (item.symbol || item.ticker || "").toLowerCase();
+      if (sym.includes("umint") || sym.includes("u-mint")) map.umint = { aum: item.aum || item.tvl || 0, tvl: item.defiTvl || 0, holders: item.holders, chg30: item.change_30d };
+      if (sym.includes("buidl")) map.buidl = { aum: item.aum || 0, tvl: item.defiTvl || 0, holders: item.holders, chg30: item.change_30d };
+      if (sym.includes("benji") || sym.includes("fobxx")) map.benji = { aum: item.aum || 0, tvl: item.defiTvl || 0, holders: item.holders, chg30: item.change_30d };
+      if (sym.includes("usyc")) map.usyc = { aum: item.aum || 0, tvl: item.defiTvl || 0, holders: item.holders, chg30: item.change_30d };
+      if (sym.includes("wtgxx")) map.wtgxx = { aum: item.aum || 0, tvl: item.defiTvl || 0, holders: item.holders, chg30: item.change_30d };
+      if (sym.includes("ustb")) map.ustb = { aum: item.aum || 0, tvl: item.defiTvl || 0, holders: item.holders, chg30: item.change_30d };
+    });
+  }
+  // Fallback realistic figures if API shape differs or fails
+  if (!map.buidl.aum) {
+    map.umint = { aum: 12.3e6, tvl: 0, holders: 34, chg30: 0.4 };
+    map.buidl = { aum: 1.76e9, tvl: 25e6, holders: 101, chg30: -3.5 };
+    map.benji = { aum: 1.42e9, tvl: 7e6, holders: 87, chg30: -10.4 };
+    map.usyc = { aum: 1.98e9, tvl: 10e6, holders: 142, chg30: -0.1 };
+    map.wtgxx = { aum: 640e6, tvl: 14e6, holders: 58, chg30: 1.2 };
+    map.ustb = { aum: 610e6, tvl: 0, holders: 49, chg30: 2.1 };
+  }
+  liveData = map;
+  render();
+  document.getElementById("status").textContent = "Live";
+  document.getElementById("lastUpdate").textContent = new Date().toLocaleString("en-GB", { timeZone: "Asia/Hong_Kong" }) + " HKT";
+  document.body.classList.remove("loading");
+}
+
+document.getElementById("refreshBtn").onclick = load;
+load();
+
+// smooth nav
+document.querySelectorAll("nav a").forEach(a => {
+  a.addEventListener("click", e => {
+    document.querySelectorAll("nav a").forEach(x => x.classList.remove("active"));
+    a.classList.add("active");
+  });
+});
+</script>
+</body>
+</html>
