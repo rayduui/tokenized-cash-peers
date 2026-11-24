@@ -2,36 +2,40 @@
   "asOf": "2026-11-24",
   "items": [
     {
-      "title": "DTCC expands eligible collateral for tokenized MMFs",
+      "title": "DTCC advances Collateral AppChain for tokenized collateral",
       "source": "DTCC",
-      "date": "2026-11-20",
-      "url": "https://www.dtcc.com/",
-      "summary": "Updated schedule recognises selected tokenized USD money-market funds as eligible margin for certain cleared products. Published haircuts 2–5% by structure and transfer-agent controls.",
-      "implication": "Improves booking and margin efficiency for global cash books."
+      "date": "2026-11-09",
+      "url": "https://www.dtcc.com/insights/2026/the-dtcc-collateral-appchain-from-experiment-to-production-infrastructure",
+      "sentiment": "Positive",
+      "summary": "DTCC positions its Collateral AppChain as production infrastructure supporting tokenized securities, stablecoins and money-market funds as mobilizable collateral across jurisdictions.",
+      "implication": "Improves path for tokenized MMFs into institutional collateral workflows."
     },
     {
-      "title": "Securitize expands BUIDL dealing capacity",
-      "source": "BlackRock / Securitize",
-      "date": "2026-11-18",
-      "url": "https://securitize.io/",
-      "summary": "Transfer agent raised daily capacity. Settlement remains T+0 against USDC in the existing 24/7 window for eligible institutions.",
-      "implication": "Higher operational throughput for large flows."
+      "title": "ISDA assesses tokenized MMFs under the CSA",
+      "source": "ISDA / Finadium",
+      "date": "2026-10-06",
+      "url": "https://finadium.com/isda-mulls-amending-csa-to-include-tokenized-mmfs/",
+      "sentiment": "Positive",
+      "summary": "ISDA paper examines how tokenized money-market fund shares may be posted under existing CSA language and identifies areas for potential standardized amendments.",
+      "implication": "Reduces legal friction for bilateral collateral use of tokenized funds."
     },
     {
-      "title": "ISDA guidance on tokenized-fund CSA treatment",
-      "source": "ISDA",
-      "date": "2026-11-19",
-      "url": "https://www.isda.org/",
-      "summary": "Clarifies how tokenized short-term government and money-market shares may be treated under existing CSA language when the underlying is eligible.",
-      "implication": "Reduces legal friction for bilateral collateral use."
+      "title": "Ondo USDY remains among largest tokenized USD products",
+      "source": "RWAWeekly",
+      "date": "2026-11-24",
+      "url": "https://rwaweekly.io/articles/state-of-tokenized-treasuries/",
+      "sentiment": "Positive",
+      "summary": "USDY continues to rank among the largest tokenized USD products by distributed value, with leadership rotating among USDY, USYC, BENJI and BUIDL.",
+      "implication": "Confirms sustained demand for yield-bearing cash alternatives."
     },
     {
-      "title": "Ondo USDY crosses $2.3B on-chain",
-      "source": "Market data",
+      "title": "Tokenized Treasuries hold near $14B with shifting leadership",
+      "source": "Market coverage",
       "date": "2026-11-23",
-      "url": "https://ondo.finance/",
-      "summary": "Ondo’s yield-bearing note remains one of the largest tokenized USD products by distributed value across multiple chains.",
-      "implication": "Confirms continued institutional and crypto-native demand for yield-bearing cash alternatives."
+      "url": "https://cryptonite.ae/global/tokenized-us-treasuries-14-09-billion-123-assets/",
+      "sentiment": "Neutral",
+      "summary": "Total distributed value remains near $14B across more than 100 assets. Product count continues to rise while absolute AUM has been roughly flat to slightly lower from September peaks.",
+      "implication": "Category is maturing; individual fund flows matter more than headline totals."
     }
   ]
 }

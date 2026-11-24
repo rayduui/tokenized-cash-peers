@@ -25,31 +25,41 @@ function formatAUM(n) {
   return '$' + Math.round(n).toLocaleString();
 }
 
+function sentimentColor(s) {
+  if (s === 'Positive') return 'emerald';
+  if (s === 'Negative') return 'rose';
+  return 'gray';
+}
+
 export default function Page() {
   const [funds, setFunds] = useState([]);
   const [news, setNews] = useState([]);
   const [protocols, setProtocols] = useState([]);
   const [sofr, setSofr] = useState(null);
+  const [rwaStatus, setRwaStatus] = useState(null);
   const [status, setStatus] = useState('Loading');
   const [lastUpdate, setLastUpdate] = useState('—');
 
   async function load() {
     setStatus('Refreshing…');
     try {
-      const [yRes, nRes, pRes, sRes] = await Promise.all([
+      const [yRes, nRes, pRes, sRes, rRes] = await Promise.all([
         fetch('/api/yields'),
         fetch('/api/news'),
         fetch('https://api.llama.fi/protocols'),
         fetch('/api/sofr'),
+        fetch('/api/rwa'),
       ]);
       const yData = await yRes.json();
       const nData = await nRes.json();
       const pData = await pRes.json();
       const sData = await sRes.json();
+      const rData = await rRes.json();
 
       setFunds(yData.funds || []);
       setNews(nData.items || []);
       setSofr(sData.rate);
+      setRwaStatus(rData.available ? 'rwa.xyz live' : (rData.message || 'rwa.xyz offline'));
 
       const rwa = (pData || []).filter((p) =>
         (p.category || '').toLowerCase().includes('rwa') ||
@@ -142,6 +152,8 @@ export default function Page() {
     Yield: f.yield,
     SOFR: sofr || 0,
   }));
+
+  const positiveNews = news.filter((n) => n.sentiment === 'Positive').length;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
@@ -242,16 +254,24 @@ export default function Page() {
         </Card>
       </Grid>
 
-      <Title className="mb-3">Daily Digest</Title>
-      <Text className="text-gray-400 text-sm mb-3">Refreshed on a daily cadence from scheduled source</Text>
+      <Flex justifyContent="between" alignItems="end" className="mb-3">
+        <div>
+          <Title>Daily Digest</Title>
+          <Text className="text-gray-400 text-sm">Refreshed on a daily cadence · {positiveNews}/{news.length} positive</Text>
+        </div>
+        {rwaStatus && <Text className="text-xs text-gray-500">{rwaStatus}</Text>}
+      </Flex>
       <Grid numItemsSm={1} numItemsLg={2} className="gap-4 mb-8">
         {news.map((item, i) => (
           <Card key={i}>
             <Flex justifyContent="between" alignItems="start">
               <Title className="text-base">{item.title}</Title>
-              <Badge color="amber">{item.date}</Badge>
+              <Badge color={sentimentColor(item.sentiment)}>{item.sentiment || 'Neutral'}</Badge>
             </Flex>
-            <Text className="text-gray-400 text-xs mt-1">{item.source}</Text>
+            <Flex justifyContent="between" className="mt-1">
+              <Text className="text-gray-400 text-xs">{item.source}</Text>
+              <Text className="text-gray-400 text-xs">{item.date}</Text>
+            </Flex>
             <Text className="mt-2">{item.summary}</Text>
             <Text className="mt-3 text-emerald-400 text-sm"><strong>Implication.</strong> {item.implication}</Text>
             {item.url && (
@@ -313,7 +333,7 @@ export default function Page() {
       </Card>
 
       <Text className="mt-8 text-gray-500 text-xs">
-        For information only. Not an offer or recommendation. AUM and changes from DefiLlama free API. SOFR from NY Fed Markets Data API. Yields and Daily Digest from scheduled source files. Figures are not independently audited. Last refresh: {lastUpdate}.
+        For information only. Not an offer or recommendation. AUM and changes from DefiLlama free API. SOFR from NY Fed Markets Data API. rwa.xyz data available when RWA_API_KEY is set. Yields and Daily Digest from scheduled source files. Figures are not independently audited. Last refresh: {lastUpdate}.
       </Text>
     </div>
   );
