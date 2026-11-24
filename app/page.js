@@ -29,23 +29,27 @@ export default function Page() {
   const [funds, setFunds] = useState([]);
   const [news, setNews] = useState([]);
   const [protocols, setProtocols] = useState([]);
+  const [sofr, setSofr] = useState(null);
   const [status, setStatus] = useState('Loading');
   const [lastUpdate, setLastUpdate] = useState('—');
 
   async function load() {
     setStatus('Refreshing…');
     try {
-      const [yRes, nRes, pRes] = await Promise.all([
+      const [yRes, nRes, pRes, sRes] = await Promise.all([
         fetch('/api/yields'),
         fetch('/api/news'),
         fetch('https://api.llama.fi/protocols'),
+        fetch('/api/sofr'),
       ]);
       const yData = await yRes.json();
       const nData = await nRes.json();
       const pData = await pRes.json();
+      const sData = await sRes.json();
 
       setFunds(yData.funds || []);
       setNews(nData.items || []);
+      setSofr(sData.rate);
 
       const rwa = (pData || []).filter((p) =>
         (p.category || '').toLowerCase().includes('rwa') ||
@@ -91,9 +95,52 @@ export default function Page() {
   const topFund = enriched[0];
   const highestYield = [...enriched].sort((a, b) => b.yield - a.yield)[0];
 
+  const issuerShare = useMemo(() => {
+    const byIssuer = {};
+    enriched.forEach((f) => {
+      const key = f.issuer || 'Other';
+      byIssuer[key] = (byIssuer[key] || 0) + (f.aum || 0);
+    });
+    return Object.entries(byIssuer)
+      .map(([issuer, aum]) => ({
+        issuer,
+        aum,
+        share: totalAUM > 0 ? (aum / totalAUM) * 100 : 0,
+      }))
+      .sort((a, b) => b.aum - a.aum);
+  }, [enriched, totalAUM]);
+
+  const signals = useMemo(() => {
+    const out = [];
+    if (sofr != null) {
+      const above = enriched.filter((f) => f.yield > sofr);
+      out.push({
+        label: 'Yield vs SOFR',
+        value: above.length + ' of ' + enriched.length + ' above SOFR',
+        tone: above.length >= enriched.length / 2 ? 'emerald' : 'amber',
+      });
+    }
+    if (positive1d > 0) {
+      out.push({
+        label: 'Flow signal',
+        value: positive1d + ' funds with positive 1d AUM change',
+        tone: 'emerald',
+      });
+    }
+    if (topFund && topFund.aum) {
+      out.push({
+        label: 'Concentration',
+        value: topFund.ticker + ' is largest by matched AUM',
+        tone: 'orange',
+      });
+    }
+    return out;
+  }, [enriched, sofr, positive1d, topFund]);
+
   const chartData = enriched.slice(0, 8).map((f) => ({
     name: f.ticker,
     Yield: f.yield,
+    SOFR: sofr || 0,
   }));
 
   return (
@@ -127,14 +174,14 @@ export default function Page() {
           <Text className="text-gray-400">known funds</Text>
         </Card>
         <Card decoration="top" decorationColor="emerald">
-          <Text>Funds tracked</Text>
-          <Metric>{enriched.length}</Metric>
-          <Text className="text-gray-400">issuers</Text>
+          <Text>SOFR</Text>
+          <Metric>{sofr != null ? sofr.toFixed(2) + '%' : 'n.a.'}</Metric>
+          <Text className="text-gray-400">NY Fed latest</Text>
         </Card>
         <Card decoration="top" decorationColor="violet">
-          <Text>RWA protocols</Text>
-          <Metric>{protocols.length}</Metric>
-          <Text className="text-gray-400">DefiLlama</Text>
+          <Text>Avg yield vs SOFR</Text>
+          <Metric>{sofr != null ? (avgYield - sofr).toFixed(2) + ' pp' : 'n.a.'}</Metric>
+          <Text className="text-gray-400">spread</Text>
         </Card>
         <Card decoration="top" decorationColor="emerald">
           <Text>Positive 1d</Text>
@@ -158,20 +205,45 @@ export default function Page() {
         </Card>
       </Grid>
 
-      <Card className="mb-6">
-        <Title>Yield snapshot</Title>
-        <BarChart
-          className="mt-4 h-56"
-          data={chartData}
-          index="name"
-          categories={["Yield"]}
-          colors={["orange"]}
-          yAxisWidth={40}
-          showAnimation
-        />
-      </Card>
+      {signals.length > 0 && (
+        <Card className="mb-6">
+          <Title>Signals</Title>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {signals.map((s, i) => (
+              <Badge key={i} color={s.tone}>{s.label}: {s.value}</Badge>
+            ))}
+          </div>
+        </Card>
+      )}
 
-      <Title className="mb-3">Developments</Title>
+      <Grid numItemsLg={2} className="gap-4 mb-6">
+        <Card>
+          <Title>Yield vs SOFR</Title>
+          <BarChart
+            className="mt-4 h-56"
+            data={chartData}
+            index="name"
+            categories={["Yield", "SOFR"]}
+            colors={["orange", "gray"]}
+            yAxisWidth={40}
+            showAnimation
+          />
+        </Card>
+        <Card>
+          <Title>Market share by issuer</Title>
+          <div className="mt-4 space-y-2">
+            {issuerShare.slice(0, 6).map((i) => (
+              <div key={i.issuer} className="flex items-center justify-between text-sm">
+                <span className="text-gray-300 truncate max-w-[180px]">{i.issuer}</span>
+                <span className="font-medium">{i.share.toFixed(1)}%</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </Grid>
+
+      <Title className="mb-3">Daily Digest</Title>
+      <Text className="text-gray-400 text-sm mb-3">Refreshed on a daily cadence from scheduled source</Text>
       <Grid numItemsSm={1} numItemsLg={2} className="gap-4 mb-8">
         {news.map((item, i) => (
           <Card key={i}>
@@ -195,35 +267,43 @@ export default function Page() {
               <TableHeaderCell>Issuer</TableHeaderCell>
               <TableHeaderCell>Type</TableHeaderCell>
               <TableHeaderCell>7d yield</TableHeaderCell>
+              <TableHeaderCell>vs SOFR</TableHeaderCell>
               <TableHeaderCell>AUM</TableHeaderCell>
+              <TableHeaderCell>Share</TableHeaderCell>
               <TableHeaderCell>1d</TableHeaderCell>
               <TableHeaderCell>7d</TableHeaderCell>
-              <TableHeaderCell>Chains</TableHeaderCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {enriched.map((f) => (
-              <TableRow key={f.ticker}>
-                <TableCell className="font-medium">{f.name}</TableCell>
-                <TableCell className="text-gray-400">{f.issuer}</TableCell>
-                <TableCell><Badge color="orange">{f.type}</Badge></TableCell>
-                <TableCell className="font-medium">{f.yield.toFixed(2)}%</TableCell>
-                <TableCell>{formatAUM(f.aum)}</TableCell>
-                <TableCell className={f.change1d >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
-                  {f.change1d != null ? (f.change1d >= 0 ? '+' : '') + f.change1d.toFixed(1) + '%' : 'n.a.'}
-                </TableCell>
-                <TableCell className={f.change7d >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
-                  {f.change7d != null ? (f.change7d >= 0 ? '+' : '') + f.change7d.toFixed(1) + '%' : 'n.a.'}
-                </TableCell>
-                <TableCell>{f.chains || '—'}</TableCell>
-              </TableRow>
-            ))}
+            {enriched.map((f) => {
+              const spread = sofr != null ? f.yield - sofr : null;
+              const share = totalAUM > 0 && f.aum ? (f.aum / totalAUM) * 100 : null;
+              return (
+                <TableRow key={f.ticker}>
+                  <TableCell className="font-medium">{f.name}</TableCell>
+                  <TableCell className="text-gray-400">{f.issuer}</TableCell>
+                  <TableCell><Badge color="orange">{f.type}</Badge></TableCell>
+                  <TableCell className="font-medium">{f.yield.toFixed(2)}%</TableCell>
+                  <TableCell className={spread != null && spread >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
+                    {spread != null ? (spread >= 0 ? '+' : '') + spread.toFixed(2) + ' pp' : 'n.a.'}
+                  </TableCell>
+                  <TableCell>{formatAUM(f.aum)}</TableCell>
+                  <TableCell>{share != null ? share.toFixed(1) + '%' : '—'}</TableCell>
+                  <TableCell className={f.change1d >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
+                    {f.change1d != null ? (f.change1d >= 0 ? '+' : '') + f.change1d.toFixed(1) + '%' : 'n.a.'}
+                  </TableCell>
+                  <TableCell className={f.change7d >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
+                    {f.change7d != null ? (f.change7d >= 0 ? '+' : '') + f.change7d.toFixed(1) + '%' : 'n.a.'}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </Card>
 
       <Text className="mt-8 text-gray-500 text-xs">
-        For information only. Not an offer or recommendation. Data from DefiLlama public API and scheduled source files. Figures are not independently audited. Last refresh: {lastUpdate}.
+        For information only. Not an offer or recommendation. AUM and changes from DefiLlama free API. SOFR from NY Fed Markets Data API. Yields and Daily Digest from scheduled source files. Figures are not independently audited. Last refresh: {lastUpdate}.
       </Text>
     </div>
   );
